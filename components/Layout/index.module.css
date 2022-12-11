@@ -1,0 +1,9 @@
+.layout {
+  grid-template-columns: 1fr;
+}
+
+@media screen and (min-width: 1024px) {
+  .layout {
+    grid-template-columns: 20% 1fr;
+  }
+}
