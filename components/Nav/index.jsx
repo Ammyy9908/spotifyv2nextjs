@@ -12,6 +12,8 @@ import playSong from "../../utils/Play_song";
 import useNetwork from "../../hooks/useNetwork";
 import OfflineIcon from "../Icons/OfflineIcon";
 import { GiToaster } from "react-icons/gi";
+import Link from "next/link";
+import { useRouter } from "next/router";
 function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
   const [dropdown, setDropdown] = React.useState(false);
   const [SearchData, setSearchData] = React.useState(false);
@@ -19,6 +21,7 @@ function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
   const network_status = useNetwork();
 
   console.log("network status", network_status);
+  const router = useRouter();
 
   React.useEffect(() => {
     const getTrackFromMic = async () => {
@@ -50,6 +53,10 @@ function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
     e.preventDefault();
     Cookies.remove("SPOTIFY_TOKEN");
     Cookies.remove("SPOTIFY_REFRESH_TOKEN");
+    localStorage.removeItem("SPOTIFY_TOKEN");
+    localStorage.removeItem("SPOTIFY_REFRESH_TOKEN");
+    Cookies.remove("accessToken");
+    Cookies.remove("clientId");
 
     window.location.href = "/";
   };
@@ -64,14 +71,19 @@ function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
 
   return (
     <nav
-      className={`w-full py-2 navbar ${"bg-black/0"} sticky top-0 px-6 flex items-center justify-between z-20`}
+      className={`backdrop-blur-md w-full py-2 navbar ${"bg-black/0"} sticky top-0 px-6 flex items-center justify-between z-20`}
       style={{
         backgroundColor: scroll > 55 && `${color}`,
       }}
     >
       <div className="nav__left flex items-center gap-3">
         <div className="nav_controls flex items-center gap-1">
-          <button className="rounded-full w-8 h-8 bg-black/50 text-white flex items-center justify-center">
+          <button
+            className="rounded-full w-8 h-8 bg-black/50 text-white flex items-center justify-center"
+            onClick={() => {
+              router.back();
+            }}
+          >
             <FiChevronLeft />
           </button>
           <button className="rounded-full w-8 h-8 bg-black/20 text-white flex items-center justify-center">
@@ -120,16 +132,16 @@ function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
           >
             <div className="user__bar__box px-3 py-2 flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-gray-300">
-                {user.images.length > 0 && (
+                {user.avatar && (
                   <img
-                    src={user.images[0].url}
-                    alt={user.display_name}
+                    src={user.avatar}
+                    alt={user.name}
                     className="w-full h-full object-cover rounded-full"
                   />
                 )}
               </div>
               <div className="user_bar_controls flex items-center gap-2">
-                <h3>{user.display_name}</h3>
+                <h3>{user.name}</h3>
                 <span>
                   <BiDownArrow />
                 </span>
@@ -144,7 +156,9 @@ function Nav({ scroll, user, color, setPlaying, setPlayerState }) {
                 <button>Account</button>
               </li>
               <li className="hover:bg-white/50 py-1 flex px-1 rounded-md w-full">
-                <button>Profile</button>
+                <Link href={`/user/${user.id}`}>
+                  <button>Profile</button>
+                </Link>
               </li>
               <li className="hover:bg-white/50 py-1 flex px-1 rounded-md w-full">
                 <button>Settings</button>

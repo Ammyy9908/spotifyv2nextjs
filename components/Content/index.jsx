@@ -1,7 +1,6 @@
 import React from "react";
 
 function Content({ children, setScroll, color }) {
-  console.log(color);
   const handleScroll = (e) => {
     //get the scroll position
     const position = e.target.scrollTop;

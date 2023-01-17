@@ -18,10 +18,22 @@ export default async function audioSearch(blobFile) {
       const trackName = music.title;
       console.log(music);
       music.artists.forEach((artist) => (singersName += `${artist.name} `));
-      toast.success("Song found 🎉 please wait...");
+      toast.success("Song found 🎉 please wait...", {
+        style: {
+          borderRadius: "10px",
+          background: "#1ed760",
+          color: "#fff",
+        },
+      });
       return { artists: singersName, trackName };
     } else {
-      toast.error("No song found 😓");
+      toast((t) => <span>No song found 😓</span>, {
+        style: {
+          borderRadius: "10px",
+          background: "#1ed760",
+          color: "#fff",
+        },
+      });
       return false;
     }
   } catch (error) {

@@ -1,10 +1,11 @@
 import "../styles/globals.css";
 import configureStore from "../redux/store";
-import { Provider } from "react-redux";
+import { connect, Provider } from "react-redux";
 import React from "react";
 import Cookies from "js-cookie";
 import getPublicAccessToken from "../utils/get_public_access_token";
-
+// eslint-disable-next-line
+import "swiper/css/bundle";
 import useNetwork from "../hooks/useNetwork";
 import usePlayerState from "../hooks/usePlayerState";
 import { Toaster } from "react-hot-toast";

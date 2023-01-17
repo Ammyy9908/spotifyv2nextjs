@@ -1,6 +1,8 @@
 import React from "react";
 import { FaPlay } from "react-icons/fa";
 import toast from "react-hot-toast";
+import GetPlaylistTracks from "../../utils/get_playlist_tracks";
+import playSong from "../../utils/Play_song";
 function hexToRgbA(hex) {
   var c;
   if (/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)) {
@@ -18,9 +20,25 @@ function hexToRgbA(hex) {
 
 function OfflineBanner({ setBanner, offline_banner }) {
   const [isRendered, setIsRendered] = React.useState(false);
+  const [tracks, setTracks] = React.useState(null);
+  const [play, setPlay] = React.useState(false);
+  const [currentSong, setCurrentSong] = React.useState(0);
+  const [audio, setAudio] = React.useState(new Audio());
 
   React.useEffect(() => {
     setIsRendered(true);
+    async function getPlaylistTracks() {
+      const tracks_response = await GetPlaylistTracks(
+        offline_banner.playlist_id
+      );
+      const items = tracks_response.items.map((item) => item.track.preview_url);
+      setTracks(items);
+    }
+    getPlaylistTracks();
+
+    audio.onended = () => {
+      nextSong();
+    };
   }, []);
   const handleClose = (e) => {
     console.log(e.target);
@@ -28,7 +46,34 @@ function OfflineBanner({ setBanner, offline_banner }) {
     if (class_list.contains("offline-banner-backdrop")) {
       setBanner(false);
     }
+    setAudio(null);
   };
+  const handlePlay = () => {
+    audio.src = tracks && tracks[currentSong];
+    audio.play();
+  };
+
+  const nextSong = () => {
+    setCurrentSong(currentSong + 1);
+    if (currentSong > tracks?.length) {
+      setCurrentSong(0);
+    }
+    handlePlay();
+  };
+
+  const isPlayed = () => {
+    if (audio.paused) {
+      audio.src = tracks[currentSong];
+      audio.play();
+      setPlay(true);
+    } else {
+      console.log("Pausing");
+      audio.pause();
+      setPlay(false);
+    }
+  };
+
+  console.log(currentSong);
   return (
     <div
       className="cursor-pointer offline-banner-backdrop bg-black/40 absolute w-full h-screen top-0 z-40 flex items-center justify-center backdrop-blur-xl"
@@ -50,9 +95,7 @@ function OfflineBanner({ setBanner, offline_banner }) {
           />
           <button
             className="absolute z-10 w-12 h-12 bg-green-500 scale-0 flex items-center justify-center rounded-full shadow-md group-hover:scale-100 transition-all"
-            onClick={() => [
-              toast.error("Playing Preview will be available soon"),
-            ]}
+            onClick={isPlayed}
           >
             <FaPlay />
           </button>

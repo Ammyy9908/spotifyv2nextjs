@@ -10,7 +10,13 @@ import SectionWrapper from "../components/SectionWrapper";
 import SectionItem from "../components/SectionItem";
 import havePublicAccessToken from "../utils/check_public_token";
 import getPublicAccessToken from "../utils/get_public_access_token";
-import Cookies from "js-cookie";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { EffectFade } from "swiper";
+import { Autoplay, Navigation } from "swiper";
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "swiper/css/navigation";
+
 import { Toaster } from "react-hot-toast";
 import getPublicAccessData from "../utils/get_public_data";
 import {
@@ -19,6 +25,7 @@ import {
   setOfflineData,
   setPlaylists,
   setRecents,
+  setShows,
   setUser,
 } from "../redux/actions/_appActions";
 import haveLoginAccessToken from "../utils/check_login_status";
@@ -29,6 +36,11 @@ import getRecents from "../utils/get_recents";
 import BlankShortcut from "../components/BlankShortcut";
 import getTopArtists from "../utils/top_artists";
 import BlankCard from "../components/BlankCard";
+import getMyShows from "../utils/getShows";
+import registerUser from "../utils/registerUser";
+import Cookies from "js-cookie";
+import getCurrentUser from "../utils/getProfile";
+import getUser from "../utils/getUser";
 
 function Home({
   user,
@@ -44,27 +56,50 @@ function Home({
   artists,
   network_status,
   player_state,
+  setShows,
+  shows,
 }) {
   const [scroll, setScroll] = useState(0);
   const [gradient, setGradient] = useState("rgba(248,56,40)");
-
-  console.log("Local Player status", player_state);
   React.useEffect(() => {
-    console.log("Home page loaded");
-
     // FIRST CHECK IF THE USER HAS A lOGIN ACCESS TOKEN
 
     if (haveLoginAccessToken()) {
       async function Init() {
-        let u = await getProfile();
-        setUser(u);
+        getProfile().then(async (u) => {
+          if (!Cookies.get("JWT_TOKEN")) {
+            registerUser(u.display_name, u.images[0].url, u.id).then(
+              async (token) => {
+                console.log("JWT TOKEN", token);
+                Cookies.set("JWT_TOKEN", token.data);
+              }
+            );
+          } else {
+            const usr = await getCurrentUser();
+            setUser(usr.me);
+          }
+        });
+
         let playlists = await getPlaylists();
         setPlaylists(playlists);
         let recents = await getRecents();
         let artists = await getTopArtists();
+        let publicData = await getPublicAccessData();
+        const { data } = publicData;
+        if (data) {
+          const { home } = data;
+          const { greeting, sectionContainer } = home;
+          const { sections } = sectionContainer;
+          setPublicData({ greeting, sections });
+        }
+
+        let shows = await getMyShows();
+        console.log("shows", shows);
+
         setTimeout(() => {
           setRecents(recents);
           setArtists(artists);
+          setShows(shows);
         }, 3000);
       }
       Init();
@@ -73,16 +108,13 @@ function Home({
         console.log("User is logged in");
         getPublicAccessData()
           .then((d) => {
-            console.log(d);
             const { data } = d;
             if (data) {
               const { home } = data;
               const { greeting, sectionContainer } = home;
               const { sections } = sectionContainer;
-              console.log(greeting, sections);
               setPublicData({ greeting, sections });
             }
-            console.log(data);
           })
           .catch((e) => {
             console.log(e);
@@ -90,7 +122,6 @@ function Home({
       } else {
         getPublicAccessToken()
           .then((d) => {
-            console.log(d);
             const { accessToken, clientId } = d;
             Cookies.set("accessToken", accessToken);
             Cookies.set("clientId", clientId);
@@ -101,8 +132,6 @@ function Home({
       }
     }
   }, []);
-
-  console.log(gradient);
   return (
     <div>
       <Layout>
@@ -113,7 +142,7 @@ function Home({
             {user && (
               <div className="greet__section px-8 py-2 my-6">
                 <h1 className="text-3xl text-white font-semibold">
-                  Good morning
+                  {publicData && publicData.greeting.text}
                 </h1>
                 <div className="shortcuts grid sm:grid-cols-2 md:grid-cols-3 gap-6 my-3">
                   {recents
@@ -137,26 +166,144 @@ function Home({
               </div>
             )}
             {user && (
-              <SectionWrapper>
-                <h1 className="text-2xl font-bold text-white">Top artists</h1>
-                <div className="section-items grid grid-cols-2 md:grid-cols-5 gap-2 my-6">
-                  {artists
-                    ? artists.items.slice(0, 5).map((item, i) => {
-                        return (
-                          <SectionItem
-                            cover={item.images[0].url}
-                            title={item.name}
-                            setGradient={setGradient}
-                            type="artist"
-                            item={item}
-                          />
-                        );
-                      })
-                    : [0, 0, 0, 0, 0].map((blank, i) => {
-                        return <BlankCard />;
-                      })}
-                </div>
-              </SectionWrapper>
+              <>
+                <SectionWrapper>
+                  <h1 className="text-2xl font-bold text-white">Top artists</h1>
+                  <Swiper
+                    className="my-6"
+                    effect="fade"
+                    autoplay={{
+                      delay: 2500,
+                      disableOnInteraction: false,
+                    }}
+                    spaceBetween={30}
+                    modules={[Autoplay, Navigation]}
+                    onSlideChange={() => console.log("slide change")}
+                    onSwiper={(swiper) => console.log(swiper)}
+                    slidesPerView={1}
+                    breakpoints={{
+                      640: {
+                        slidesPerView: 2,
+                        spaceBetween: 20,
+                      },
+                      768: {
+                        slidesPerView: 3,
+                        spaceBetween: 40,
+                      },
+                      1024: {
+                        slidesPerView: 4,
+                        spaceBetween: 50,
+                      },
+                    }}
+                  >
+                    {artists
+                      ? artists.items.map((item, i) => {
+                          return (
+                            <SwiperSlide>
+                              {" "}
+                              <SectionItem
+                                cover={item.images[0].url}
+                                title={item.name}
+                                setGradient={setGradient}
+                                type="artist"
+                                item={item}
+                              />
+                            </SwiperSlide>
+                          );
+                        })
+                      : [0, 0, 0, 0, 0].map((blank, i) => {
+                          return <BlankCard />;
+                        })}
+                  </Swiper>
+                </SectionWrapper>
+                {publicData &&
+                  publicData.sections.items
+                    .slice(0, 4)
+                    .filter((item) => item.sectionItems.items.length > 1)
+                    .map((section, i) => {
+                      return (
+                        <SectionWrapper>
+                          <h1 className="text-2xl font-bold text-white">
+                            {section.data.title.text}
+                          </h1>
+                          <Swiper
+                            className="my-6"
+                            spaceBetween={50}
+                            onSlideChange={() => console.log("slide change")}
+                            onSwiper={(swiper) => console.log(swiper)}
+                            autoplay={{
+                              delay: 2500,
+                              disableOnInteraction: false,
+                            }}
+                            modules={[Autoplay, Navigation]}
+                            slidesPerView={1}
+                            breakpoints={{
+                              640: {
+                                slidesPerView: 2,
+                                spaceBetween: 20,
+                              },
+                              768: {
+                                slidesPerView: 3,
+                                spaceBetween: 40,
+                              },
+                              1024: {
+                                slidesPerView: 4,
+                                spaceBetween: 50,
+                              },
+                            }}
+                          >
+                            {section.sectionItems.items
+                              .filter(
+                                (item) =>
+                                  item.content.data?.images?.items.length > 0
+                              )
+                              .map((item, i) => {
+                                return (
+                                  <SwiperSlide>
+                                    <SectionItem
+                                      cover={
+                                        item.content.data.images.items[0]
+                                          .sources[0].url
+                                      }
+                                      title={item.content.data.name}
+                                      type={item.content.data.__typename}
+                                      color={
+                                        item.content.data.images.items[0]
+                                          .extractedColors?.colorDark.hex
+                                      }
+                                      setGradient={setGradient}
+                                      setBanner={setBanner}
+                                      item={item}
+                                    />
+                                  </SwiperSlide>
+                                );
+                              })}
+                          </Swiper>
+                        </SectionWrapper>
+                      );
+                    })}
+
+                <SectionWrapper>
+                  <h1 className="text-2xl font-bold text-white">Your shows</h1>
+                  <div className="section-items grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 my-6">
+                    {shows
+                      ? shows.items.slice(0, 5).map((item, i) => {
+                          return (
+                            <SectionItem
+                              cover={item.show.images[0].url}
+                              title={item.show.name}
+                              setGradient={setGradient}
+                              type="show"
+                              item={item}
+                            />
+                          );
+                        })
+                      : [0, 0, 0, 0, 0].map((blank, i) => {
+                          return <BlankCard />;
+                        })}
+                  </div>
+                </SectionWrapper>
+              </>
             )}
 
             {!user &&
@@ -165,7 +312,6 @@ function Home({
                     .slice(0, 4)
                     .filter((item) => item.sectionItems.items.length > 1)
                     .map((section, i) => {
-                      console.log(section.sectionItems);
                       return (
                         <SectionWrapper>
                           <h1 className="text-2xl font-bold text-white">
@@ -230,6 +376,7 @@ const mapStateToProps = (state) => ({
   offline_banner: state.appReducer.offline_banner,
   recents: state.appReducer.recents,
   artists: state.appReducer.artists,
+  shows: state.appReducer.shows,
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -239,6 +386,7 @@ const mapDispatchToProps = (dispatch) => ({
   setPlaylists: (playlists) => dispatch(setPlaylists(playlists)),
   setRecents: (recents) => dispatch(setRecents(recents)),
   setArtists: (artists) => dispatch(setArtists(artists)),
+  setShows: (shows) => dispatch(setShows(shows)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Home);

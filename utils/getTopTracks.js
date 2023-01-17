@@ -1,10 +1,10 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-const getTopArtists = async () => {
+const getTopTracks = async () => {
   try {
     const r = await axios.get(
-      "https://api.spotify.com/v1/me/top/artists?time_range=short_term&limit=30",
+      "https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=30",
       {
         headers: {
           Authorization: `Bearer ${Cookies.get("SPOTIFY_TOKEN")}`,
@@ -17,4 +17,4 @@ const getTopArtists = async () => {
   }
 };
 
-export default getTopArtists;
+export default getTopTracks;

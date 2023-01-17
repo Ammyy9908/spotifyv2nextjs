@@ -1,10 +1,12 @@
 import axios from "axios";
 
-const playNext = async () => {
+const transferTrack = async (id) => {
   try {
-    const r = await axios.post(
-      `https://api.spotify.com/v1/me/player/next`,
-      {},
+    const r = await axios.put(
+      `	https://api.spotify.com/v1/me/player`,
+      {
+        device_ids: [id],
+      },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("SPOTIFY_TOKEN")}`,
@@ -17,4 +19,4 @@ const playNext = async () => {
   }
 };
 
-export default playNext;
+export default transferTrack;

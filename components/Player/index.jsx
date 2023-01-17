@@ -1,27 +1,25 @@
 import React from "react";
 import { AiOutlineHeart, AiOutlineExpandAlt } from "react-icons/ai";
-import { BiShuffle, BiChevronUp } from "react-icons/bi";
+import { BiShuffle, BiChevronUp, BiDownArrow } from "react-icons/bi";
 import { GiPreviousButton, GiNextButton, GiMicrophone } from "react-icons/gi";
 import { IoPause, IoPlay } from "react-icons/io5";
-import { MdReplay, MdQueueMusic, MdDevices } from "react-icons/md";
+import { MdReplay, MdQueueMusic, MdDevices, MdClear } from "react-icons/md";
 import { connect } from "react-redux";
 import usePlayerState from "../../hooks/usePlayerState";
-import { setPlaying } from "../../redux/actions/_appActions";
+import { setDevicePopup, setPlaying } from "../../redux/actions/_appActions";
+import changeVolume from "../../utils/change-volumne";
 import getCurrentTrack from "../../utils/getCurrentTrack";
 import pausePlayer from "../../utils/pause_player";
+import playNext from "../../utils/playNext";
+import playPrev from "../../utils/playPrev";
 import resumePlayer from "../../utils/resumePlayer";
-function Player({ isPlaying, setPlaying }) {
-  const player_state = usePlayerState();
-
-  React.useEffect(() => {
-    window.addEventListener("storage", () => {
-      // When local storage changes, dump the list to
-      // the console.
-      console.log(JSON.parse(window.localStorage.getItem("playerState")));
-    });
-  }, []);
-
-  console.log("Player State: " + player_state);
+import DevicePopUp from "../DevicePopUp";
+import HighAudioIcon from "../Icons/HighAudioIcon";
+import LowAudioIcon from "../Icons/LowAudioIcon";
+import MediumSoundIcon from "../Icons/MediumSoundIcon";
+import MuteIcon from "../Icons/MuteIcon";
+function Player({ isPlaying, setPlaying, setPopup, device_popup }) {
+  const [volume, setVolume] = React.useState(0);
   const handlePause = async () => {
     await pausePlayer();
     setPlaying(false);
@@ -32,6 +30,20 @@ function Player({ isPlaying, setPlaying }) {
     await resumePlayer();
     setPlaying(true);
   };
+
+  const handleNext = async () => {
+    await playNext();
+  };
+
+  const handleprevious = async () => {
+    await playPrev();
+  };
+
+  const handleVolume = async (e) => {
+    setVolume(e.target.value);
+    await changeVolume(e.target.value);
+  };
+
   return (
     <div
       className="absolute bottom-0
@@ -52,10 +64,10 @@ function Player({ isPlaying, setPlaying }) {
           </div>
           <div className="player__album__info">
             <h2 className="text-md" id="track_name">
-              26 Blvd
+              .
             </h2>
             <p className="text-xs" id="artist_name">
-              Prem dhillon
+              ...
             </p>
           </div>
         </div>
@@ -70,7 +82,7 @@ function Player({ isPlaying, setPlaying }) {
           <button className="w-8 h-8 text-xl">
             <BiShuffle />
           </button>
-          <button className="w-8 h-8 text-xl">
+          <button className="w-8 h-8 text-xl" onClick={handleprevious}>
             <GiPreviousButton />
           </button>
           <button
@@ -79,7 +91,7 @@ function Player({ isPlaying, setPlaying }) {
           >
             {!isPlaying ? <IoPlay /> : <IoPause />}
           </button>
-          <button className="w-8 h-8 text-xl">
+          <button className="w-8 h-8 text-xl" onClick={handleNext}>
             <GiNextButton />
           </button>
           <button className="w-8 h-8 text-xl">
@@ -87,30 +99,53 @@ function Player({ isPlaying, setPlaying }) {
           </button>
         </div>
       </div>
-      <div className="player__right text-white">
+      <div className="player__right text-white flex items-center gap-2">
         <button className="w-8 h-8 text-xl">
           <GiMicrophone />
         </button>
         <button className="w-8 h-8 text-xl">
           <MdQueueMusic />
         </button>
-        <button className="w-8 h-8 text-xl">
+        <button
+          className="w-8 h-8 text-xl relative"
+          onClick={(e) => {
+            setPopup(!device_popup);
+          }}
+        >
           <MdDevices />
         </button>
+        <div className="volume-control  flex items-center gap-2">
+          {volume < 1 && <MuteIcon />}
+          {volume < 15 && volume > 0 && <LowAudioIcon />}
+          {volume > 15 && volume < 65 && <MediumSoundIcon />}
+          {volume > 65 && <HighAudioIcon />}
+          <input
+            class="rounded-lg overflow-hidden appearance-none bg-gray-400 h-2 w-128"
+            type="range"
+            min="0"
+            max="100"
+            step="1"
+            value={volume}
+            onChange={handleVolume}
+          />
+        </div>
         <button className="w-8 h-8 text-xl">
           <AiOutlineExpandAlt />
         </button>
       </div>
+      <DevicePopUp />
     </div>
   );
 }
 
 const mapStateToProps = (state) => ({
   isPlaying: state.appReducer.isPlaying,
+  device_popup: state.appReducer.device_popup,
 });
 
 const mapDispatchToProps = (dispatch) => ({
   setPlaying: (isPlaying) => dispatch(setPlaying(isPlaying)),
+  setPopup: (device_popup) => dispatch(setDevicePopup(device_popup)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Player);

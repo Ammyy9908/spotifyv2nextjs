@@ -1,7 +1,7 @@
 window.onSpotifyWebPlaybackSDKReady = () => {
   const token = localStorage.getItem("SPOTIFY_TOKEN");
   const player = new Spotify.Player({
-    name: "Kodnest Player",
+    name: "Reactify",
     getOAuthToken: (cb) => {
       cb(token);
     },
@@ -45,7 +45,8 @@ window.onSpotifyWebPlaybackSDKReady = () => {
       //     "absolute_cover"
       //   ).style.backgroundImage = `url(${image})`;
 
-      document.getElementById("track_name").textContent = track_name;
+      document.getElementById("track_name").textContent =
+        track_name.length > 9 ? track_name.slice(0, 9) + "..." : track_name;
       document.getElementById("artist_name").textContent = artist;
     }
   });

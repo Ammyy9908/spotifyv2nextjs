@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const playNext = async () => {
+const playPrev = async () => {
   try {
     const r = await axios.post(
-      `https://api.spotify.com/v1/me/player/next`,
+      `https://api.spotify.com/v1/me/player/previous`,
       {},
       {
         headers: {
@@ -17,4 +17,4 @@ const playNext = async () => {
   }
 };
 
-export default playNext;
+export default playPrev;

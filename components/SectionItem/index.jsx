@@ -31,25 +31,26 @@ function SectionItem({
   setBanner,
   user,
   setPlayerState,
+  setPlaying,
   isPlaying,
   playerState,
   item,
 }) {
   const [colors, setColors] = React.useState(null);
-  console.log("Section Item", item);
   React.useEffect(() => {
     getExtractedColors(cover)
       .then((d) => {
-        console.log(d);
         setColors(d.data.extractedColors);
       })
       .catch((e) => console.log(e));
   }, []);
 
   const handlePlay = async () => {
-    await playArtist(item.uri);
+    console.log("Playing song");
     setPlaying(true);
-    setPlayerState(item.id);
+    await playArtist(type === "show" ? item.show.uri : item.uri);
+
+    setPlayerState(type === "show" ? item.show.uri : item.uri);
   };
 
   const handlePause = async () => {
@@ -63,9 +64,8 @@ function SectionItem({
   };
 
   const analyzePlayer = () => {
-    console.log("Analyzing player");
-
-    if (playerState !== item.id) {
+    let uri = type === "show" ? item.show.uri : item.uri;
+    if (playerState !== uri) {
       handlePlay();
     } else if (isPlaying) {
       handlePause();
@@ -76,18 +76,34 @@ function SectionItem({
 
   return (
     <div
-      className="w-full cursor-pointer  h-[215px] relative group overflow-hidden rounded-md"
+      className="w-full cursor-pointer  h-[215px] relative group overflow-hidden rounded-md shadow-2xl flex items-center justify-center bg-gray-300"
       onMouseOver={() =>
         colors
           ? setGradient(hexToRgbA(colors[0].colorDark.hex))
-          : setGradient("#000000")
+          : setGradient("#333333")
       }
     >
-      <img
-        src={cover}
-        alt="section-item-thumb"
-        className="transition-all group-hover:scale-110 section-item-image rounded-md absolute w-full h-full object-cover"
-      />
+      {cover ? (
+        <img
+          src={cover}
+          alt="section-item-thumb"
+          className="transition-all group-hover:scale-110 section-item-image rounded-md absolute w-full h-full object-cover"
+        />
+      ) : (
+        <svg
+          role="img"
+          height="64"
+          width="64"
+          aria-hidden="true"
+          data-testid="card-image-fallback"
+          viewBox="0 0 24 24"
+          data-encore-id="icon"
+          class="Svg-sc-ytk21e-0 uPxdw"
+          fill="#ffffff"
+        >
+          <path d="M6 3h15v15.167a3.5 3.5 0 11-3.5-3.5H19V5H8v13.167a3.5 3.5 0 11-3.5-3.5H6V3zm0 13.667H4.5a1.5 1.5 0 101.5 1.5v-1.5zm13 0h-1.5a1.5 1.5 0 101.5 1.5v-1.5z"></path>
+        </svg>
+      )}
       <div
         className="section-item-footer  absolute z-10 backdrop-blur-xl  bottom-0 w-full h-[80px] transition-all rounded-l-b-md rounded-r-b-md opacity-0 group-hover:opacity-100"
         style={{
@@ -107,11 +123,17 @@ function SectionItem({
               ? setBanner({
                   color: colors[0].colorDark.hex,
                   cover: cover,
+                  playlist_id: item.uri.split(":")[2],
                 })
               : analyzePlayer()
           }
         >
-          {playerState == item.id && isPlaying ? <FaPause /> : <FaPlay />}
+          {playerState == (type === "show" ? item.show.uri : item.uri) &&
+          isPlaying ? (
+            <FaPause />
+          ) : (
+            <FaPlay />
+          )}
         </button>
       </div>
     </div>

@@ -8,6 +8,10 @@ const intialState = {
   isPlaying: false,
   playerState: null,
   currentWindow: "Home",
+  shows: null,
+  device_popup: false,
+  profile_form: false,
+  top_tracks: null,
 };
 
 const AppReducer = (state = intialState, action) => {
@@ -16,6 +20,30 @@ const AppReducer = (state = intialState, action) => {
       return {
         ...state,
         user: action.user,
+      };
+
+    case "SET_TOP_TRACKS":
+      return {
+        ...state,
+        top_tracks: action.top_tracks,
+      };
+
+    case "SET_PROFILE_FORM":
+      return {
+        ...state,
+        profile_form: action.profile_form,
+      };
+
+    case "SET_DEVICE_POPUP":
+      return {
+        ...state,
+        device_popup: action.device_popup,
+      };
+
+    case "SET_SHOWS":
+      return {
+        ...state,
+        shows: action.shows,
       };
 
     case "SET_WINDOW":

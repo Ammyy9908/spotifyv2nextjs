@@ -20,7 +20,6 @@ function ShortcutItem({
 }) {
   const [colors, setColors] = React.useState(null);
   const [menu, setMenu] = React.useState(false);
-  console.log("Item=>", item);
   React.useEffect(() => {
     getExtractedColors(cover)
       .then((d) => {
@@ -29,8 +28,6 @@ function ShortcutItem({
       })
       .catch((e) => console.log(e));
   }, []);
-
-  console.log(colors);
 
   const handlePlay = async () => {
     playSong(item.track.uri).then(async () => {

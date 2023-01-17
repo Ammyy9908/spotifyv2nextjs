@@ -46,3 +46,18 @@ export const setWindow = (window) => ({
   type: "SET_WINDOW",
   window,
 });
+
+export const setShows = (shows) => ({
+  type: "SET_SHOWS",
+  shows,
+});
+
+export const setTopTracks = (top_tracks) => ({
+  type: "SET_TOP_TRACKS",
+  top_tracks,
+});
+
+export const setDevicePopup = (device_popup) => ({
+  type: "SET_DEVICE_POPUP",
+  device_popup,
+});
